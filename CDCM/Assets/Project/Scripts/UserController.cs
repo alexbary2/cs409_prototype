@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,10 +12,22 @@ public class UserController : MonoBehaviour {
     public Vector3 forceVal, torqueVal;
 
 
+    // initialize fuel rate and battery life
+    public float fuelrate = 1000000;
+    public float batterylife = 10000000;
+    public int decreasedrate = 100;
+
+    public float time = 0;
+
+
+    public UnityEngine.UI.Text batterylife_text;
+
+
     Rigidbody rb;
 
     void Start()
     {
+        batterylife_text = GetComponent<UnityEngine.UI.Text>();
         rb = GetComponent<Rigidbody>();
     }
 
@@ -30,6 +42,17 @@ public class UserController : MonoBehaviour {
     }
     private void FixedUpdate()
     {
+
+        //SetBatterylifeText();
+        
+        // disable the controls if either fuelrate or batterylife is empty
+        if ( fuelrate <= 0 || batterylife <= 0 ){
+            return;
+        }
+
+        fuelrate -= decreasedrate * Time.deltaTime;
+        batterylife -= decreasedrate * Time.deltaTime;
+
         //force & torque initializations
         forceVal = new Vector3(0, 0, 0);
         torqueVal = new Vector3(0, 0, 0);
@@ -119,6 +142,14 @@ public class UserController : MonoBehaviour {
         //apply torque
         rb.AddTorque(torqueVal);
     }
+
+
+
+    //void SetBatterylifeText(){
+
+    //    //batterylife_text.text = batterylife.ToString() ;
+
+    //}
 
 
 }
