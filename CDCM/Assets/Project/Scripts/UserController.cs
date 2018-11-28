@@ -15,20 +15,27 @@ public class UserController : MonoBehaviour {
     // initialize fuel rate and battery life
     public float fuelrate = 1000000;
     public float batterylife = 10000000;
+    public float initialFuelrate = 1000000/100;
+    public float initialBatterylife = 10000000/100;
     public int decreasedrate = 100;
 
     public float time = 0;
 
+    public Text fuelText;
+    public Text batteryText;
+    public Text speedText;
 
-    public UnityEngine.UI.Text batterylife_text;
-
+    private int infoCycle = 0;
+    private int timer = 0;
 
     Rigidbody rb;
 
     void Start()
     {
-        batterylife_text = GetComponent<UnityEngine.UI.Text>();
         rb = GetComponent<Rigidbody>();
+        SetFuelText();
+        SetBatteryText();
+        SetSpeedText();
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -40,17 +47,34 @@ public class UserController : MonoBehaviour {
     {
         rb.angularVelocity = Vector3.zero;
     }
+
     private void FixedUpdate()
     {
+        //Checks to see if it should quit right away
+        if (Input.GetKey(KeyCode.Escape)) {
+            Application.Quit();
+        }
 
-        //SetBatterylifeText();
+        //Cycles through information
+        if (Input.GetKey("i") && timer<0) {
+            if(infoCycle < 2) {
+                infoCycle++;
+            } else {
+                infoCycle = 0;
+            }
+            timer = 30;
+        }
+        timer--;
+
+        SetFuelText();
+        SetBatteryText();
+        SetSpeedText();
         
         // disable the controls if either fuelrate or batterylife is empty
-        if ( fuelrate <= 0 || batterylife <= 0 ){
+        if ( fuelrate <= 0 || batterylife <= 0 ) {
             return;
         }
 
-        fuelrate -= decreasedrate * Time.deltaTime;
         batterylife -= decreasedrate * Time.deltaTime;
 
         //force & torque initializations
@@ -61,68 +85,69 @@ public class UserController : MonoBehaviour {
         //forward propulsion
         if (Input.GetKey("w"))
         {
-            forceVal += viewT.forward * forceMod;
+            updateForce(viewT.forward);
         }
         //left propulsion
         if (Input.GetKey("a"))
         {
-            forceVal += -viewT.right * forceMod;
+            updateForce(-viewT.right);
         }
         //backwards propulsion
         if (Input.GetKey("s"))
         {
-            forceVal += -viewT.forward * forceMod;
+            updateForce(-viewT.forward);
         }
         //right propulsion
         if (Input.GetKey("d"))
         {
-            forceVal += viewT.right * forceMod;
+            updateForce(viewT.right);
         }
         //upwards propulsion
         if (Input.GetKey("space"))
         {
-            forceVal += viewT.up * forceMod;
+            updateForce(viewT.up);
         }
         //downwards propulsion
         if (Input.GetKey("c"))
         {
-            forceVal += -viewT.up * forceMod;
+            updateForce(-viewT.up);
         }
 
                     //torque/rotation calcs
         //roll left
         if (Input.GetKey("q"))
         {
-            torqueVal += viewT.forward * torqueMod;
+            updateTorque(viewT.forward);
         }
         //roll right
         if (Input.GetKey("e"))
         {
-            torqueVal += -viewT.forward * torqueMod;
+            updateTorque(-viewT.forward);
         }
         //yaw right
         if (Input.GetKey("right"))
         {
-            torqueVal += viewT.up * torqueMod;
+            updateTorque(viewT.up);
         }
         //yaw left
         if (Input.GetKey("left"))
         {
-            torqueVal += -viewT.up * torqueMod;
+            updateTorque(-viewT.up);
         }
         //pitch forwards (down)
         if (Input.GetKey("up"))
         {
-            torqueVal += viewT.right * torqueMod;
+            updateTorque(viewT.right);
         }
         //pitch backwards (up)
         if (Input.GetKey("down"))
         {
-            torqueVal += -viewT.right * torqueMod;
+            updateTorque(-viewT.right);
         }
         //stabilization
         if (Input.GetKey("z"))
         {
+            fuelrate -= decreasedrate * Time.deltaTime;
             forceVal = -rb.velocity * forceMod * 0.3f;
             //torqueVal = -rb.angularVelocity.normalized * torqueMod * 1f;
             if (rb.angularVelocity.magnitude > 2f * Time.deltaTime)
@@ -137,23 +162,45 @@ public class UserController : MonoBehaviour {
             Debug.Log("Stabilizing User");
         }
 
-        if (Input.GetKey(KeyCode.Escape)) {
-            Application.Quit();
-        }
-
         //apply force
         rb.AddForce(forceVal);
         //apply torque
         rb.AddTorque(torqueVal);
     }
 
+    private void updateForce(Vector3 forceChange) {
+        forceVal += forceChange * forceMod;
+        fuelrate -= decreasedrate * Time.deltaTime;
+    }
+    private void updateTorque(Vector3 torqueChange) {
+        torqueVal += torqueChange * torqueMod;
+        fuelrate -= decreasedrate * Time.deltaTime;
+    }
 
+    private void SetFuelText() {
+        if(infoCycle != 2) {
+            fuelText.text = "Fuel: " + (fuelrate/initialFuelrate).ToString("N2") + "%";
+        } else {
+            fuelText.text = "";
+        }
 
-    //void SetBatterylifeText(){
+    }
 
-    //    //batterylife_text.text = batterylife.ToString() ;
+    private void SetBatteryText() {
+        if(infoCycle != 2) {
+            batteryText.text = "Battery: " + (batterylife/initialBatterylife).ToString("N2") + "%";
+        } else {
+            batteryText.text = "";
+        }
+        
+    }
 
-    //}
-
+    private void SetSpeedText() {
+        if(infoCycle != 1) {
+            speedText.text = "Speed: " + rb.velocity.magnitude.ToString("N2") + " m/s";
+        } else {
+            speedText.text = "";
+        }
+    }
 
 }
