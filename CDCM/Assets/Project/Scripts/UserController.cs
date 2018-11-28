@@ -137,6 +137,10 @@ public class UserController : MonoBehaviour {
             Debug.Log("Stabilizing User");
         }
 
+        if (Input.GetKey(KeyCode.Escape)) {
+            Application.Quit();
+        }
+
         //apply force
         rb.AddForce(forceVal);
         //apply torque
